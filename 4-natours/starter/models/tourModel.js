@@ -32,7 +32,7 @@ const tourSchema = new mongoose.Schema({
     required: [true, 'A tour must have a price'],
   },
   priceDiscount: Number,
-  Summary: {
+  summary: {
     type: String,
     trim: true, //Used to remove blank spaces from a string
     required: [true, ' A tour must have a description'],
