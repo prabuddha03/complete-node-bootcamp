@@ -2,8 +2,12 @@ const Tour = require('../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    console.log(req.query);
-    const tours = await Tour.find();
+    const queryObj = {...req.query}; // this creates a new object which wont cause any change to the values in req.ruery.
+    const excludeField = ['page', 'sort', 'limit', 'fields'];
+    excludeField.forEach(el => delete queryObj[el]);
+
+    console.log(req.query, queryObj);
+    const tours = await Tour.find(queryObj);
     res.status(200).json({
       status: 'success',
       results: tours.length,
