@@ -1,39 +1,24 @@
+/* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require('../models/tourModel');
+
+const APIFeatures = require('../utils/apifeatures');
+
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  next();
+};
 
 exports.getAllTours = async (req, res) => {
   try {
-    //1A. Filtering
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const queryObj = { ...req.query }; // this creates a new object which wont cause any change to the values in req.ruery.
-    const excludeField = ['page', 'sort', 'limit', 'fields'];
-    excludeField.forEach((el) => delete queryObj[el]);
+    //EXECUTE QUERY
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.query;
 
-    //1B. Advanced Filtering
-    let queryString = JSON.stringify(queryObj);
-    queryString = queryString.replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    );
-    console.log(JSON.parse(queryString));
-    let query = Tour.find(JSON.parse(queryString));
-
-    //2. Sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    //3.Limiting
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      query = query.select('-__v');
-    }
-
-    const tours = await query;
     res.status(200).json({
       status: 'success',
       results: tours.length,
