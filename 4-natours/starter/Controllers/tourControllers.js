@@ -2,12 +2,30 @@ const Tour = require('../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const queryObj = {...req.query}; // this creates a new object which wont cause any change to the values in req.ruery.
+    //1A. Filtering
+    // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    const queryObj = { ...req.query }; // this creates a new object which wont cause any change to the values in req.ruery.
     const excludeField = ['page', 'sort', 'limit', 'fields'];
-    excludeField.forEach(el => delete queryObj[el]);
+    excludeField.forEach((el) => delete queryObj[el]);
 
-    console.log(req.query, queryObj);
-    const tours = await Tour.find(queryObj);
+    //1B. Advanced Filtering
+    let queryString = JSON.stringify(queryObj);
+    queryString = queryString.replace(
+      /\b(gte|gt|lte|lt)\b/g,
+      (match) => `$${match}`
+    );
+    console.log(JSON.parse(queryString));
+    let query = Tour.find(JSON.parse(queryString));
+
+    //2. Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    const tours = await query;
     res.status(200).json({
       status: 'success',
       results: tours.length,
